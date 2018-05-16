@@ -62,12 +62,12 @@ void readHeader()
      Serial.print("\n");
 
      read8Bit(0x0148); // read romsize
-     MBC = lowByte;
+     romSize = lowByte;
      Serial.print(romSize);
      Serial.print("\n");
 
      read8Bit(0x0149); // read ramsize
-     MBC = lowByte;
+     ramSize = lowByte;
      Serial.print(ramSize);
      Serial.print("\n");    
 }
