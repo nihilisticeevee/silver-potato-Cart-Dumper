@@ -74,8 +74,15 @@ void readHeader()
 
 void sendAddr(uint32_t addr)
 {
+    // if you are daisychaining, add 2nd, 3rd SPI.transfer(next_byte_of_data )
+
   digitalWrite (latchPin, LOW);
-  SPI.transfer (addr);
+  //need to bit shift and bit mask to send 1 byte at a time
+  SPI.transfer (addr & 00000000000000000000000011111111);
+  SPI.transfer ((addr >> 8) & 00000000000000000000000011111111);
+  SPI.transfer ((addr >> 16) & 00000000000000000000000011111111);
+  SPI.transfer ((addr >> 24) & 00000000000000000000000011111111);
+  
   digitalWrite (latchPin, HIGH);
   delay (500);
 }
