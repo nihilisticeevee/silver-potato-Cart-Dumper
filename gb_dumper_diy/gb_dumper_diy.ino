@@ -155,6 +155,24 @@ void gbReadRomOnly()
   }
   
 }
+void mbc1()
+{
+  //set these to say im going to change banks
+  digitalWrite(rdPin, HIGH); // RD 1
+  digitalWrite(wrPin, LOW); // WR 0
+ //set data lines to output so we can send bank number
+  DDRK = B11111111;
+ 
+  //write to a adress to say im chaning rom bank
+  sendAddr(0x2100); //might be a diff number
+  //write rom bank number
+  PORTK = B00000001; //bank 1, banks go from  0x01-0x7F,
+                     //bank numbers 0x20, 0x40, and 0x60 cannot be used
+                     //125 banks total
+  
+  //set data back to input
+   DDRK = 0x00;
+}
 
 
 void loop()
