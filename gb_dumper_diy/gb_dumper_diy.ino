@@ -118,6 +118,9 @@ void read8Bit(uint32_t addr)
  //now write read
  // use ports https://www.arduino.cc/en/uploads/Hacking/PinMap2560big.png
   lowByte = PINK; //read port in to low byte
+  Serial.print(lowByte);
+  Serial.print("\n");
+  
 
 }
 void read16Bit(uint32_t addr)
@@ -140,6 +143,6 @@ void gbReadRomOnly()
 
 void loop()
 {
-
+  readHeader();
   gbReadRomOnly();
 }
