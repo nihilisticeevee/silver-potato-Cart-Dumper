@@ -26,14 +26,14 @@ void setup()
  pinMode(clockPin, OUTPUT);
  pinMode(MO, OUTPUT);
 
- pinMode(1, INPUT); // double check if can use these for data pins
-  pinMode(2, INPUT);
-   pinMode(3, INPUT);
-    pinMode(4, INPUT);
-     pinMode(5, INPUT);
-      pinMode(6, INPUT);
-       pinMode(7, INPUT);
-        pinMode(8, INPUT);
+ //pinMode(1, INPUT); // double check if can use these for data pins
+  //pinMode(2, INPUT);
+   //pinMode(3, INPUT);
+    //pinMode(4, INPUT);
+     //pinMode(5, INPUT);
+      //pinMode(6, INPUT);
+       //pinMode(7, INPUT);
+        //pinMode(8, INPUT);
 
 
 SPI.begin ();
@@ -78,11 +78,13 @@ void sendAddr(uint32_t addr)
 
   digitalWrite (latchPin, LOW);
   //need to bit shift and bit mask to send 1 byte at a time
-  SPI.transfer (addr & 00000000000000000000000011111111);
-  SPI.transfer ((addr >> 8) & 00000000000000000000000011111111);
-  SPI.transfer ((addr >> 16) & 00000000000000000000000011111111);
-  SPI.transfer ((addr >> 24) & 00000000000000000000000011111111);
-  
+ // SPI.transfer (addr & 00000000000000000000000011111111);
+  //SPI.transfer ((addr >> 8) & 00000000000000000000000011111111);
+ // SPI.transfer ((addr >> 16) & 00000000000000000000000011111111);
+ // SPI.transfer ((addr >> 24) & 00000000000000000000000011111111);
+
+ //faster if works SPI.transfer(buffer, size) 
+  SPI.transfer(&addr, 4);
   digitalWrite (latchPin, HIGH);
   delay (500);
 }
@@ -102,4 +104,10 @@ void read16Bit(uint32_t addr)
 void loop()
 {
   
+ // for (int i =0; i < 100;i++)
+  {
+    sendAddr(4294967294);
+   // shiftOut(MO, clockPin, LSBFIRST, 4);
+
+  }
 }
