@@ -1,4 +1,3 @@
-// dont forget to set pins for dataread
 #include<SPI.h>
 //Pin connected to ST_CP of 74HC595
 //int latchPin = 4;
@@ -16,6 +15,15 @@ int latchPin = 10;   // D4
 int clockPin = 52; //D52
 int MO = 51;  //D51
 int MI = 50;  //D50
+int rdPin = 49;
+int wrPin = 47;
+
+//gb pins
+//VCC – Power (5 volts)
+//CLK – Clock signal (not used)
+//~WR – if low(grounded) and if RD is low, we can write to the SRAM and load a ROM or SRAM bank
+//~RD – if low (grounded) and if WR is high, we can read the ROM and SRAM
+//CS_SRAM – if enabled, selects the SRAM
 
   uint8_t highByte = 0x00; //msb
   uint8_t lowByte =  0x00; //lsb
@@ -33,6 +41,9 @@ void setup()
  pinMode(latchPin, OUTPUT);
  pinMode(clockPin, OUTPUT);
  pinMode(MO, OUTPUT);
+  pinMode(rdPin, OUTPUT);
+ pinMode(wrPin, OUTPUT);
+ 
  SPI.begin ();
  SPI.beginTransaction(SPISettings(16000000, LSBFIRST, SPI_MODE0));
  Serial.begin(9600);
@@ -65,6 +76,11 @@ void setup()
 
 }
 
+//needed to read from card
+  digitalWrite(rdPin, LOW); // RD 0
+  digitalWrite(wrPin, HIGH); // WR 1
+ 
+ Serial.println("START"); // Send the start command
 
  //input ports
    DDRF = 0x00; // All pins in PORTF are inputs A0-A7
