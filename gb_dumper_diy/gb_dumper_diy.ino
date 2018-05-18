@@ -17,6 +17,8 @@ int MO = 51;  //D51
 int MI = 50;  //D50
 int rdPin = 49;
 int wrPin = 47;
+int csPin = 48;
+
 
 //gb pins
 //VCC – Power (5 volts)
@@ -33,6 +35,9 @@ int wrPin = 47;
   uint8_t romSize  = 0x00;
   uint8_t ramSize  = 0x00;
   
+  int ramBanks  = 0x00;
+  int romBanks  = 0x00;
+
   
 
 void setup()
@@ -41,9 +46,11 @@ void setup()
  pinMode(latchPin, OUTPUT);
  pinMode(clockPin, OUTPUT);
  pinMode(MO, OUTPUT);
-  pinMode(rdPin, OUTPUT);
+ pinMode(rdPin, OUTPUT);
  pinMode(wrPin, OUTPUT);
- 
+ pinMode(wrPin, OUTPUT);
+
+
  SPI.begin ();
  SPI.beginTransaction(SPISettings(16000000, LSBFIRST, SPI_MODE0));
  Serial.begin(9600);
@@ -77,8 +84,9 @@ void setup()
 }
 
 //needed to read from card
-  digitalWrite(rdPin, LOW); // RD 0
+  digitalWrite(rdPin, HIGH); // RD 1
   digitalWrite(wrPin, HIGH); // WR 1
+  digitalWrite(csPin, HIGH); // RD 1
  
  Serial.println("START"); // Send the start command
 
@@ -116,6 +124,9 @@ void readHeader()
      ramSize = lowByte;
      Serial.print(ramSize);
      Serial.print("\n");    
+
+    // romBanks = romSize / 16;
+    // ramBanks = ramSize /8;
 }
 
 void sendAddr(uint32_t addr)
@@ -157,23 +168,72 @@ void gbReadRomOnly()
 }
 void mbc1()
 {
-  //set these to say im going to change banks
-  digitalWrite(rdPin, HIGH); // RD 1
-  digitalWrite(wrPin, LOW); // WR 0
- //set data lines to output so we can send bank number
-  DDRK = B11111111;
- 
-  //write to a adress to say im chaning rom bank
-  sendAddr(0x2100); //might be a diff number
-  //write rom bank number
-  PORTK = B00000001; //bank 1, banks go from  0x01-0x7F,
-                     //bank numbers 0x20, 0x40, and 0x60 cannot be used
-                     //125 banks total
-  
-  //set data back to input
-   DDRK = 0x00;
-}
+	//read bank 0
+    for(uint8_t i = 0x0000; i<=0x3FFF; i++)
+  {
+    read8Bit(i);
+  }
 
+	//will overdump set to actual size later
+	for (uint8_t i = 0x01; i <= 0x7f; i++) 
+	{
+		bankSwitch(i);
+		for (uint8_t i = 0x4000; i <= 0x7FFF; i++)
+		{
+			read8Bit(i);
+		}
+	}
+
+
+}
+  
+
+
+void bankSwitch(uint8_t bank)
+{
+  digitalWrite(rdPin, 1); 
+    digitalWrite(wrPin, 0); 
+  DDRK = B11111111; //set data to output
+  
+  if(MBC == 0x01 || MBC == 0x02 || MBC == 0x03 || MBC == 0xFF) //mbc1
+  {
+	 if (bank != 20 || bank != 40 || bank != 60)
+	 {
+		 if (ramSize == 0x03)
+		 {
+			 sendAddr(0x7000); //set 32k ram mode
+			 PORTK = 0x01;
+
+			 sendAddr(0x3000); //set bank number
+			 PORTK = bank;
+
+		 }
+		 else
+		 {
+			 sendAddr(0x7000);
+			 PORTK = 0x00;  //8k  ram mode
+
+			 sendAddr(0x3000); //set bank number
+			 PORTK = bank & 0x1F; //send lower 5 bits
+			 sendAddr(0x4000); //set bank number
+			 PORTK = bank >> 5; //send last 2 bits
+		 }
+	 }
+   
+ 
+  }
+
+  if (MBC == 0x05 || MBC == 0x06) //mmb2, maybe add 3 and 5 later
+  {
+	  sendAddr(0x3000); //set bank number
+	  PORTK = bank;
+  }
+
+  digitalWrite(rdPin, LOW); // RD 0
+  digitalWrite(wrPin, HIGH); // WR 1
+  DDRF = 0x00; //set data to read again
+
+}
 
 void loop()
 {
